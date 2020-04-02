@@ -116,6 +116,7 @@ dependencies:
     - pyyaml==3.13
     - pyzmq==18.0.0
     - qtconsole==4.4.3
+    - qutip==4.5.0
     - scikit-image==0.14.2
     - scipy==1.2.1
     - send2trash==1.5.0
