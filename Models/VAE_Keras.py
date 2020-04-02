@@ -238,17 +238,18 @@ class DenseVariationalAutoencoderKeras():
 
         callbacks_list = [checkpoint1, checkpoint2]
 
-        self.model.fit(     
-            x_train
-            , y_train
-            , batch_size = batch_size
-            , shuffle = True
-            , epochs = epochs
-            , verbose = verbose
-            , initial_epoch = initial_epoch
-            , callbacks = callbacks_list
-            , validation_data = validation_data
-        )
+        history = self.model.fit(     
+                                  x_train
+                                  , y_train
+                                  , batch_size = batch_size
+                                  , shuffle = True
+                                  , epochs = epochs
+                                  , verbose = verbose
+                                  , initial_epoch = initial_epoch
+                                  , callbacks = callbacks_list
+                                  , validation_data = validation_data
+                                 )
+        return history
 
         
     def plot_model(self, run_folder):
