@@ -233,9 +233,15 @@ class DenseVariationalAutoencoderKeras():
             
         """
                 
-        checkpoint_filepath=os.path.join(run_folder, "weights/weights-{epoch:03d}-{loss:.2f}.h5")
-        checkpoint1 = ModelCheckpoint(checkpoint_filepath, save_weights_only = True, verbose=1)
-        checkpoint2 = ModelCheckpoint(os.path.join(run_folder, 'weights/weights.h5'), save_weights_only = True, verbose=1)
+        checkpoint_filepath=os.path.join(run_folder, 
+                                         "weights/weights-{epoch:03d}-{loss:.2f}.h5")
+        checkpoint1 = ModelCheckpoint(checkpoint_filepath, 
+                                      save_weights_only = True, 
+                                      verbose=0)
+        checkpoint2 = ModelCheckpoint(os.path.join(run_folder, 
+                                                   'weights/weights.h5'), 
+                                      save_weights_only = True, 
+                                      verbose=0)
 
         callbacks_list = [checkpoint1, checkpoint2]
         
