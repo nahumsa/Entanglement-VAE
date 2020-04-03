@@ -83,7 +83,7 @@ class DenseVariationalAutoencoderKeras():
                 x = Dropout(rate = 0.25)(x)
 
         shape_before_flattening = K.int_shape(x)[1:]
-        #x = Flatten()(x)
+        
         self.mu = Dense(self.z_dim, name='mu')(x)
         self.log_var = Dense(self.z_dim, name='log_var')(x)
 
@@ -213,7 +213,7 @@ class DenseVariationalAutoencoderKeras():
                     batch_size, validation_data, 
                     epochs, run_folder, verbose=2, 
                     print_every_n_batches = 100, 
-                    initial_epoch = 0):
+                    initial_epoch = 0, callbacks = None):
         """
         Arguments:
             x_train {np.array} -- Train X.
@@ -229,6 +229,7 @@ class DenseVariationalAutoencoderKeras():
             print_every_n_batches {int} -- Number of batches that you want to print
                                            results. (default: {100})
             initial_epoch {int} -- Starting epoch (default: {0})
+            callbacks {list} -- Callbacks of the training (default: {None})
             
         """
                 
@@ -237,7 +238,12 @@ class DenseVariationalAutoencoderKeras():
         checkpoint2 = ModelCheckpoint(os.path.join(run_folder, 'weights/weights.h5'), save_weights_only = True, verbose=1)
 
         callbacks_list = [checkpoint1, checkpoint2]
-
+        
+        # Check if there are new callbacks
+        if callbacks != None:
+          for call in callbacks:
+            callbacks_list.append(call)
+        
         history = self.model.fit(     
                                   x_train
                                   , y_train

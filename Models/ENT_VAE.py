@@ -110,7 +110,10 @@ class EntanglementSoftmax(DenseVariationalAutoencoderKeras):
 
         self.model = Model(model_input, model_output)
     
-  def compile(self, learning_rate, r_loss_factor, Beta):
+  def compile(self,
+              learning_rate, 
+              r_loss_factor, 
+              Beta):
       """
       Compiling the network using r_loss as the categorical crossentropy
       and Adam optimizer. 
