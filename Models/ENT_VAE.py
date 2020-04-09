@@ -264,7 +264,10 @@ class ScinetSoftmax(ScinetKeras):
         self.model = Model([encoder_input,question_input], model_output)
  
 
-    def compile(self, learning_rate, r_loss_factor, Beta):
+    def compile(self, 
+                learning_rate, 
+                r_loss_factor, 
+                Beta):
         """
         Compiling the network. Need to choose the learning rate, r_loss_factor
         and Beta for the Beta-VAE, if Beta = 1 then it is a VAE.
@@ -296,7 +299,11 @@ class ScinetSoftmax(ScinetKeras):
             return  r_loss + Beta*kl_loss
 
         optimizer = Adam(lr=learning_rate)
-        self.model.compile(optimizer=optimizer, loss = vae_loss,  metrics = [vae_r_loss, vae_kl_loss])
+        self.model.compile(optimizer=optimizer, 
+                            loss = vae_loss,  
+                            metrics = [ 'accuracy',
+                                        vae_r_loss, 
+                                        vae_kl_loss])
 
 
         
