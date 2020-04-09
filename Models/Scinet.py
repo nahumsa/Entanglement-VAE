@@ -4,6 +4,7 @@ from keras import backend as K
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint 
 from keras.utils import plot_model
+from keras.losses import categorical_crossentropy
 import tensorflow as tf
 
 import numpy as np
@@ -23,8 +24,8 @@ class ScinetKeras():
     input_dim(tuple): Dimentions of the input.
     encoder_dense_units(list): Units of the dense layer of the encoder.
     decoder_dense_units(list): Units of the dense layer of the decoder.
-    z_dim(int): Dimension of the latent layer.
-    q_dim(int): Dimension of the question layer.
+    z_dim(tuple): Dimension of the latent layer.
+    q_dim(tuple): Dimension of the question layer.
     use_batch_norm(Boolean): True if want to use batch normalization.
                              (default=False)
     use_dropout(Boolean): True if want to use dropout layers.
@@ -106,17 +107,13 @@ class ScinetKeras():
         
                
         decoder_input = Input(shape=(self.z_dim,), name='decoder_input')
-        
-        #Check if there is a question
-        if self.q_dim != (0,):
-          question_input = Input(shape=self.q_dim, name='question_input') 
 
-          Merge = Concatenate(axis=1, name='Concatenate_Q_Z')([question_input,decoder_input])                
+        question_input = Input(shape=self.q_dim, name='question_input') 
+
+        Merge = Concatenate(axis=1, name='Concatenate_Q_Z')([question_input,decoder_input])                
         
-          x = Dense(np.prod(shape_before_flattening))(Merge)
-        
-        else:
-          x = Dense(np.prod(shape_before_flattening))(decoder_input)
+        x = Dense(np.prod(shape_before_flattening))(Merge)
+
 
 
         for i in range(self.n_layers_decoder):
@@ -144,21 +141,13 @@ class ScinetKeras():
             
 
         decoder_output = x
-
-        if self.q_dim != (0,):          
-          self.decoder = Model([question_input,decoder_input], decoder_output)
         
-        else:
-          self.decoder = Model(decoder_input, decoder_output
-
+        self.decoder = Model([question_input,decoder_input], decoder_output)
+        
         ### THE FULL VAE
-        if self.q_dim != (0,):    
-          model_output = self.decoder([question_input,encoder_output])
-          self.model = Model([model_input,question_input], model_output)
-        else:
-          model_output = self.decoder(encoder_output)
-          self.model = Model(model_input, model_output)
-
+        model_output = self.decoder([question_input,encoder_output])
+        self.model = Model([encoder_input,question_input], model_output)
+    
 
     def compile(self, learning_rate, r_loss_factor, Beta):
         """
@@ -231,16 +220,17 @@ class ScinetKeras():
 
         callbacks_list = [checkpoint1, checkpoint2]
 
-        self.model.fit(     
-            x_train
-            , y_train
-            , batch_size = batch_size
-            , shuffle = True
-            , epochs = epochs
-            , verbose = verbose
-            , initial_epoch = initial_epoch
-            , callbacks = callbacks_list
-        )
+        history = self.model.fit(     
+                                x_train
+                                , y_train
+                                , batch_size = batch_size
+                                , shuffle = True
+                                , epochs = epochs
+                                , verbose = verbose
+                                , initial_epoch = initial_epoch
+                                , callbacks = callbacks_list
+                                )
+        return history
 
 
     
@@ -248,173 +238,3 @@ class ScinetKeras():
         plot_model(self.model, to_file=os.path.join(run_folder ,'viz/model.png'), show_shapes = True, show_layer_names = True)
         plot_model(self.encoder, to_file=os.path.join(run_folder ,'viz/encoder.png'), show_shapes = True, show_layer_names = True)
         plot_model(self.decoder, to_file=os.path.join(run_folder ,'viz/decoder.png'), show_shapes = True, show_layer_names = True)
-
-class CommScinet(ScinetKeras):
-    """ 
-    NOT COMPLETED.
-    Scinet variation 
-    
-    """
-    def __init__(self
-        , input_dim
-        , encoder_dense_units
-        , decoder_dense_units
-        , z_dim
-        , q_dim
-        , use_batch_norm = False
-        , use_dropout= False
-        ):
-        super.__init__(input_dim
-                      , encoder_dense_units
-                      , decoder_dense_units
-                      , z_dim
-                      , q_dim = (0,)
-                      , use_batch_norm = use_batch_norm
-                      , use_dropout= use_batch_norm
-                      )
-  
-
-    def _build(self):
-        
-        ### THE ENCODER
-        encoder_input = Input(shape=self.input_dim, name='encoder_input')
-
-        x = encoder_input
-
-        for i in range(self.n_layers_encoder):
-            
-            dense_layer = Dense( 
-                self.encoder_dense_units[i]
-                , name = 'encoder_dense_' + str(i)
-                )
-            
-            x = dense_layer(x)
-
-            if self.use_batch_norm:
-                x = BatchNormalization()(x)
-
-            x = LeakyReLU()(x)
-
-            if self.use_dropout:
-                x = Dropout(rate = 0.25)(x)
-
-        shape_before_flattening = K.int_shape(x)[1:]                
-        
-        self.mu = Dense(self.z_dim, name='mu')(x)
-        self.log_var = Dense(self.z_dim, name='log_var')(x)
-
-        self.encoder_mu_log_var = Model(encoder_input, (self.mu, self.log_var))
-
-        def sampling(args):
-            mu, log_var = args
-            epsilon = K.random_normal(shape=K.shape(mu), mean=0., stddev=1.)
-            return mu + K.exp(log_var / 2) * epsilon
-
-        encoder_output = Lambda(sampling, name='encoder_output')([self.mu, self.log_var])
-
-        self.encoder = Model(encoder_input, encoder_output)
-        
-        
-
-        ### THE DECODER 1
-                       
-        decoder_input = Input(shape=(self.z_dim,), name='decoder_input')
-        
-        #Check if there is a question
-        if self.q_dim != (0,):
-          question_input = Input(shape=self.q_dim, name='question_input') 
-
-          Merge = Concatenate(axis=1, name='Concatenate_Q_Z')([question_input,decoder_input])                
-        
-          x = Dense(np.prod(shape_before_flattening))(Merge)
-        
-        else:
-          x = Dense(np.prod(shape_before_flattening))(decoder_input)
-
-
-        for i in range(self.n_layers_decoder):
-            
-            dense_layer = Dense( 
-                self.decoder_dense_units[i]
-                , name = 'decoder_dense_' + str(i)
-                )
-
-            x = dense_layer(x)
-
-            if i < self.n_layers_decoder - 1: 
-                
-                if self.use_batch_norm:
-                    x = BatchNormalization()(x)
-                
-                x = LeakyReLU()(x)
-                
-                if self.use_dropout:
-                    x = Dropout(rate = 0.25)(x)
-            else:
-                pass
-
-        decoder_output = x
-        if self.q_dim != (0,):          
-          self.decoder_1 = Model([question_input,decoder_input], decoder_output)
-        
-        else:
-          self.decoder_1 = Model(decoder_input, decoder_output)
-
-        ### THE DECODER 2
-                       
-        decoder_input = Input(shape=(self.z_dim,), name='decoder_input')
-        
-        #Check if there is a question
-        if self.q_dim != (0,):
-          question_input = Input(shape=self.q_dim, name='question_input') 
-
-          Merge = Concatenate(axis=1, name='Concatenate_Q_Z')([question_input,decoder_input])                
-        
-          x = Dense(np.prod(shape_before_flattening))(Merge)
-        
-        else:
-          x = Dense(np.prod(shape_before_flattening))(decoder_input)
-
-
-        for i in range(self.n_layers_decoder):
-            
-            dense_layer = Dense( 
-                self.decoder_dense_units[i]
-                , name = 'decoder_dense_' + str(i)
-                )
-
-            x = dense_layer(x)
-
-            if i < self.n_layers_decoder - 1: 
-                
-                if self.use_batch_norm:
-                    x = BatchNormalization()(x)
-                
-                x = LeakyReLU()(x)
-                
-                if self.use_dropout:
-                    x = Dropout(rate = 0.25)(x)
-            else:
-                pass
-
-        decoder_output = x
-
-        if self.q_dim != (0,):          
-          self.decoder_2 = Model([question_input,decoder_input], decoder_output)
-        
-        else:
-          self.decoder_2 = Model(decoder_input, decoder_output)
-
-
-        ### THE FULL VAE
-        model_input = encoder_input
-        
-        if self.q_dim != (0,):    
-          model_output = self.decoder([question_input,encoder_output])
-          self.model = Model([model_input,question_input], model_output)
-
-        else:          
-          model_output_1 = self.decoder_1(encoder_output)
-          model_output_2 = self.decoder_2(encoder_output)
-          self.model = Model(model_input, [model_output_1,model_output_2])
-
