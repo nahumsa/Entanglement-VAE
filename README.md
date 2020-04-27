@@ -1,4 +1,4 @@
-# Variational Autoencoders as an Entanglement Witness
+# $\beta$-Variational Autoencoders as an Entanglement Witness
 
 
 -----------------------------------------------------------------
