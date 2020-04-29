@@ -1,4 +1,4 @@
-# Beta-Variational Autoencoders as an Entanglement Witness
+# Beta-Variational Autoencoders as an Entanglement Classifier
 
 
 -----------------------------------------------------------------
