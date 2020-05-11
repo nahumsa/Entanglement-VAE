@@ -1,6 +1,6 @@
 # Beta-Variational Autoencoders as an Entanglement Classifier
 Code for: Nahum Sá, Itzhak Roditi. "β-Variational Autoencoder as an Entanglement
-Classifier" https://arxiv.org/pdf/2004.14420.pdf
+Classifier" https://arxiv.org/abs/2004.14420
 
 -----------------------------------------------------------------
 ## Running the code
